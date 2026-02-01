@@ -14,7 +14,7 @@ const BountyApp = () => {
   const [view, setView] = useState('list');
   const [selectedBounty, setSelectedBounty] = useState(null);
   
-  const [bounties] = useState([
+  const [bounties, setBounties] = useState([
     { 
       id: 1, 
       title: 'x402 Verification Prototype', 
@@ -22,7 +22,8 @@ const BountyApp = () => {
       payout: '500 USDC', 
       status: 'In Review', 
       network: 'Base',
-      tasks: ['Node.js Server', 'Ethers.js Verification', 'Demo Script']
+      tasks: ['Node.js Server', 'Ethers.js Verification', 'Demo Script'],
+      history: ['Created 2h ago', 'Claimed 1h ago', 'Submitted 30m ago']
     },
     { 
       id: 2, 
@@ -31,18 +32,17 @@ const BountyApp = () => {
       payout: '800 USDC', 
       status: 'Open', 
       network: 'Base',
-      tasks: ['Bounty Listing', 'Creation Form', 'Wallet Integration']
-    },
-    { 
-      id: 3, 
-      title: 'Escrow Contract Hardening', 
-      description: 'Security audit and event optimization for the core escrow contract.',
-      payout: '1500 USDC', 
-      status: 'Open', 
-      network: 'Base',
-      tasks: ['Audit security', 'Optimize gas', 'Add events']
+      tasks: ['Bounty Listing', 'Creation Form', 'Wallet Integration'],
+      history: ['Created 5h ago']
     },
   ]);
+
+  const updateStatus = (id, newStatus) => {
+    setBounties(bounties.map(b => b.id === id ? { ...b, status: newStatus } : b));
+    if (selectedBounty && selectedBounty.id === id) {
+      setSelectedBounty({ ...selectedBounty, status: newStatus });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#0B0F1A] text-slate-200 font-sans selection:bg-emerald-500/30">
@@ -213,21 +213,51 @@ const BountyApp = () => {
                 </div>
                 <div className="space-y-6">
                   <div className="bg-[#0B0F1A] border border-slate-800 rounded-2xl p-6">
-                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Timeline</h4>
-                    <div className="space-y-4 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">Created</span>
-                        <span className="text-slate-300 italic">2 hours ago</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">Deadline</span>
-                        <span className="text-slate-300 italic">Feb 15, 2026</span>
-                      </div>
+                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Activity</h4>
+                    <div className="space-y-3">
+                      {(selectedBounty.history || []).map((h, i) => (
+                        <div key={i} className="text-xs text-slate-400 flex gap-2">
+                          <span className="text-emerald-500">•</span>
+                          {h}
+                        </div>
+                      ))}
                     </div>
                   </div>
-                  <button className="w-full bg-white text-slate-900 py-4 rounded-2xl font-bold hover:bg-slate-200 transition-colors">
-                    Claim Mission
-                  </button>
+
+                  {selectedBounty.status === 'Open' && (
+                    <button 
+                      onClick={() => updateStatus(selectedBounty.id, 'Claimed')}
+                      className="w-full bg-white text-slate-900 py-4 rounded-2xl font-bold hover:bg-slate-200 transition-colors"
+                    >
+                      Claim Mission
+                    </button>
+                  )}
+
+                  {selectedBounty.status === 'Claimed' && (
+                    <button 
+                      onClick={() => updateStatus(selectedBounty.id, 'In Review')}
+                      className="w-full bg-emerald-500 text-slate-900 py-4 rounded-2xl font-bold hover:bg-emerald-400 transition-colors"
+                    >
+                      Submit Proof
+                    </button>
+                  )}
+
+                  {selectedBounty.status === 'In Review' && (
+                    <div className="space-y-3">
+                      <button 
+                        onClick={() => updateStatus(selectedBounty.id, 'Paid')}
+                        className="w-full bg-emerald-500 text-slate-900 py-4 rounded-2xl font-bold hover:bg-emerald-400 transition-colors"
+                      >
+                        Accept & Pay
+                      </button>
+                      <button 
+                        onClick={() => updateStatus(selectedBounty.id, 'Open')}
+                        className="w-full bg-red-500/10 text-red-500 border border-red-500/20 py-4 rounded-2xl font-bold hover:bg-red-500/20 transition-colors"
+                      >
+                        Cancel Bounty
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
